@@ -21,13 +21,16 @@ const COURSES = [
   'Proficiency in Designated Security Duties', 'Ship Security Officer',
 ];
 
-function TrainingModal({ onClose, onSave, seafarers }: {
+function TrainingModal({ onClose, onSave, seafarers, currentUser }: {
   onClose: () => void;
   onSave: (r: TrainingRecord) => void;
   seafarers: typeof mockSeafarers;
+  currentUser?: any;
 }) {
+  const isSeafarer = currentUser?.role === 'Seafarer';
+  const lockedSf = isSeafarer ? mockSeafarers.find(s => s.name === currentUser.full_name || s.id === currentUser.id) : null;
   const [form, setForm] = useState({
-    seafarer_id: '', course: '', institution: '', country: 'Ethiopia',
+    seafarer_id: lockedSf?.id || '', course: '', institution: '', country: 'Ethiopia',
     cert_no: '', issue_date: '', expiry: '', cert_file: false,
     remarks: '',
   });
@@ -79,10 +82,14 @@ function TrainingModal({ onClose, onSave, seafarers }: {
             <div className="form-grid">
               <div className="form-group">
                 <label>Seafarer <span style={{ color: '#dc2626' }}>*</span></label>
-                <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
-                  <option value="">Select seafarer...</option>
-                  {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-                </select>
+                {isSeafarer && lockedSf ? (
+                  <input value={`${lockedSf.name} (${lockedSf.id})`} readOnly style={{ background: '#f8fafc', color: '#374151' }} />
+                ) : (
+                  <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
+                    <option value="">Select seafarer...</option>
+                    {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
+                  </select>
+                )}
                 {errors.seafarer_id && <span style={{ color: '#dc2626', fontSize: 11 }}>{errors.seafarer_id}</span>}
               </div>
               <div className="form-group">
@@ -248,7 +255,7 @@ export default function TrainingRecords({ currentUser }: { currentUser?: any }) 
 
   return (
     <div className="page">
-      {showAdd && <TrainingModal onClose={() => setShowAdd(false)} onSave={handleSave} seafarers={mockSeafarers} />}
+      {showAdd && <TrainingModal onClose={() => setShowAdd(false)} onSave={handleSave} seafarers={mockSeafarers} currentUser={currentUser} />}
       {reviewing && <ReviewModal record={reviewing} onClose={() => setReviewing(null)} onAction={handleAction} canApprove={canReviewTraining} />}
 
       <div className="flex-between page-header">

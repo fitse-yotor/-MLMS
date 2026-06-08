@@ -15,9 +15,11 @@ interface SeaServiceRecord {
 const RANKS = ['AB Seaman', 'OS (Ordinary Seaman)', 'Deck Officer', 'Chief Officer', 'Master', 'Engineer', 'Chief Engineer', 'Electrical Officer', 'Radio Officer', 'Cook', 'Steward', 'Other'];
 const VESSEL_TYPES = ['Cargo', 'Tanker', 'Passenger', 'Ferry', 'Bulk Carrier', 'Container', 'Fishing', 'Offshore', 'Other'];
 
-function AddSeaServiceModal({ onClose, onSave, seafarers }: { onClose: () => void; onSave: (r: SeaServiceRecord) => void; seafarers: typeof mockSeafarers }) {
+function AddSeaServiceModal({ onClose, onSave, seafarers, currentUser }: { onClose: () => void; onSave: (r: SeaServiceRecord) => void; seafarers: typeof mockSeafarers; currentUser?: any }) {
+  const isSeafarer = currentUser?.role === 'Seafarer';
+  const lockedSf = isSeafarer ? mockSeafarers.find(s => s.name === currentUser.full_name || s.id === currentUser.id) : null;
   const [form, setForm] = useState({
-    seafarer_id: '', vessel: '', imo: '', flag: 'Ethiopia', vessel_type: '',
+    seafarer_id: lockedSf?.id || '', vessel: '', imo: '', flag: 'Ethiopia', vessel_type: '',
     rank: '', department: '', company: '',
     sign_on: '', sign_on_port: '', sign_off: '', sign_off_port: '',
     voyage_type: '', doc_letter: false, doc_contract: false, doc_discharge: false,
@@ -61,10 +63,14 @@ function AddSeaServiceModal({ onClose, onSave, seafarers }: { onClose: () => voi
             <div className="form-section-title">Seafarer</div>
             <div className="form-group">
               <label>Seafarer <span style={{ color: '#dc2626' }}>*</span></label>
-              <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
-                <option value="">Select seafarer...</option>
-                {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-              </select>
+              {isSeafarer && lockedSf ? (
+                <input value={`${lockedSf.name} (${lockedSf.id})`} readOnly style={{ background: '#f8fafc', color: '#374151' }} />
+              ) : (
+                <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
+                  <option value="">Select seafarer...</option>
+                  {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
+                </select>
+              )}
               <Err k="seafarer_id" />
             </div>
           </div>
@@ -257,7 +263,7 @@ export default function SeaServiceRecords({ currentUser }: { currentUser?: any }
 
   return (
     <div className="page">
-      {showAdd && <AddSeaServiceModal onClose={() => setShowAdd(false)} onSave={handleSave} seafarers={mockSeafarers} />}
+      {showAdd && <AddSeaServiceModal onClose={() => setShowAdd(false)} onSave={handleSave} seafarers={mockSeafarers} currentUser={currentUser} />}
       {reviewing && <ReviewModal record={reviewing} onClose={() => setReviewing(null)} onAction={handleAction} canApprove={canReviewSeaService} />}
 
       <div className="flex-between page-header">

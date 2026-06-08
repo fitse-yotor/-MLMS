@@ -18,8 +18,10 @@ const CERT_CATEGORIES: Record<string, string[]> = {
   'Professional': ['Deck Rating Certificate', 'Engine Rating Certificate', 'Able Seafarer Deck', 'Able Seafarer Engine', 'Officer of the Watch (Deck)', 'Officer of the Watch (Engine)', 'Chief Engineer Certificate', 'Master Certificate'],
 };
 
-function NewAppModal({ onClose, onSave, seafarers }: { onClose: () => void; onSave: (a: CertApp) => void; seafarers: typeof mockSeafarers }) {
-  const [form, setForm] = useState({ seafarer_id: '', cert_category: '', cert_type: '', docs_training: false, docs_medical: false, docs_sea_service: false, docs_passport: false });
+function NewAppModal({ onClose, onSave, seafarers, currentUser }: { onClose: () => void; onSave: (a: CertApp) => void; seafarers: typeof mockSeafarers; currentUser?: any }) {
+  const isSeafarer = currentUser?.role === 'Seafarer';
+  const lockedSf = isSeafarer ? mockSeafarers.find(s => s.name === currentUser.full_name || s.id === currentUser.id) : null;
+  const [form, setForm] = useState({ seafarer_id: lockedSf?.id || '', cert_category: '', cert_type: '', docs_training: false, docs_medical: false, docs_sea_service: false, docs_passport: false });
   const [errors, setErrors] = useState<any>({});
 
   function set(k: string, v: any) { setForm(f => ({ ...f, [k]: v })); setErrors((e: any) => { const n = { ...e }; delete n[k]; return n; }); }
@@ -68,10 +70,14 @@ function NewAppModal({ onClose, onSave, seafarers }: { onClose: () => void; onSa
             <div className="form-section-title">Select Seafarer</div>
             <div className="form-group">
               <label>Seafarer <span style={{ color: '#dc2626' }}>*</span></label>
-              <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
-                <option value="">Select seafarer...</option>
-                {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-              </select>
+              {isSeafarer && lockedSf ? (
+                <input value={`${lockedSf.name} (${lockedSf.id})`} readOnly style={{ background: '#f8fafc', color: '#374151' }} />
+              ) : (
+                <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
+                  <option value="">Select seafarer...</option>
+                  {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
+                </select>
+              )}
               <Err k="seafarer_id" />
             </div>
           </div>
@@ -235,7 +241,7 @@ export default function CertificationApplications({ currentUser }: { currentUser
 
   return (
     <div className="page">
-      {showNew && <NewAppModal onClose={() => setShowNew(false)} onSave={handleSave} seafarers={mockSeafarers} />}
+      {showNew && <NewAppModal onClose={() => setShowNew(false)} onSave={handleSave} seafarers={mockSeafarers} currentUser={currentUser} />}
       {generating && <GenerateCertModal app={generating} onClose={() => setGenerating(null)} onGenerate={handleGenerate} />}
 
       <div className="flex-between page-header">

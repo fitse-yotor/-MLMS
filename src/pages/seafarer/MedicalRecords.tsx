@@ -9,8 +9,10 @@ interface MedicalRecord {
   status: string; remarks: string;
 }
 
-function MedicalModal({ onClose, onSave, seafarers }: { onClose: () => void; onSave: (r: MedicalRecord) => void; seafarers: typeof mockSeafarers }) {
-  const [form, setForm] = useState({ seafarer_id: '', cert_no: '', facility: '', country: 'Ethiopia', doctor: '', exam_date: '', issue_date: '', expiry: '', fitness: '', cert_file: false });
+function MedicalModal({ onClose, onSave, seafarers, currentUser }: { onClose: () => void; onSave: (r: MedicalRecord) => void; seafarers: typeof mockSeafarers; currentUser?: any }) {
+  const isSeafarer = currentUser?.role === 'Seafarer';
+  const lockedSf = isSeafarer ? mockSeafarers.find(s => s.name === currentUser.full_name || s.id === currentUser.id) : null;
+  const [form, setForm] = useState({ seafarer_id: lockedSf?.id || '', cert_no: '', facility: '', country: 'Ethiopia', doctor: '', exam_date: '', issue_date: '', expiry: '', fitness: '', cert_file: false });
   const [errors, setErrors] = useState<any>({});
 
   function set(k: string, v: any) { setForm(f => ({ ...f, [k]: v })); setErrors((e: any) => { const n = { ...e }; delete n[k]; return n; }); }
@@ -44,10 +46,14 @@ function MedicalModal({ onClose, onSave, seafarers }: { onClose: () => void; onS
             <div className="form-section-title">Seafarer</div>
             <div className="form-group">
               <label>Seafarer <span style={{ color: '#dc2626' }}>*</span></label>
-              <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
-                <option value="">Select seafarer...</option>
-                {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-              </select>
+              {isSeafarer && lockedSf ? (
+                <input value={`${lockedSf.name} (${lockedSf.id})`} readOnly style={{ background: '#f8fafc', color: '#374151' }} />
+              ) : (
+                <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
+                  <option value="">Select seafarer...</option>
+                  {seafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
+                </select>
+              )}
               <Err k="seafarer_id" />
             </div>
           </div>
@@ -205,7 +211,7 @@ export default function MedicalRecords({ currentUser }: { currentUser?: any }) {
 
   return (
     <div className="page">
-      {showAdd && <MedicalModal onClose={() => setShowAdd(false)} onSave={handleSave} seafarers={mockSeafarers} />}
+      {showAdd && <MedicalModal onClose={() => setShowAdd(false)} onSave={handleSave} seafarers={mockSeafarers} currentUser={currentUser} />}
       {reviewing && <ReviewModal record={reviewing} onClose={() => setReviewing(null)} onAction={handleAction} canApprove={canApproveMedical} />}
 
       <div className="flex-between page-header">

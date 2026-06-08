@@ -47,10 +47,10 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 960, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
+      <div className="login-layout" style={{ width: '100%', maxWidth: 960, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
 
         {/* Left: branding + quick login */}
-        <div style={{ color: '#fff' }}>
+        <div className="login-left" style={{ color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
             <div style={{ width: 56, height: 56, background: '#1e40af', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 800, border: '2px solid #3b82f6' }}>M</div>
             <div>
@@ -90,7 +90,7 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
 
         {/* Right: login form */}
-        <div style={{ background: '#fff', borderRadius: 16, padding: 36, boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>
+        <div className="login-right" style={{ background: '#fff', borderRadius: 16, padding: 36, boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>
           <div style={{ marginBottom: 28 }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>Sign In</div>
             <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Enter your credentials to access the portal</div>
