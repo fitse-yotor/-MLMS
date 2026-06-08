@@ -15,9 +15,11 @@ const BOOK_TYPES = ["Seafarer's Book (Standard)", "Seafarer's Book (Duplicate)",
 const REQUEST_TYPES = ['New Issuance', 'Renewal', 'Replacement (Lost)', 'Replacement (Damaged)', 'Replacement (Expired)'];
 const WORKFLOW_STEPS = ['Application', 'Document Review', 'Payment', 'Officer Review', 'Approval', 'Printing', 'Issuance'];
 
-function NewBookModal({ onClose, onSave }: { onClose: () => void; onSave: (b: SeafarerBook) => void }) {
+function NewBookModal({ onClose, onSave, currentUser }: { onClose: () => void; onSave: (b: SeafarerBook) => void; currentUser?: any }) {
+  const isSeafarer = currentUser?.role === 'Seafarer';
+  const lockedSf = isSeafarer ? mockSeafarers.find(s => s.name === currentUser.full_name || s.id === currentUser.id) : null;
   const [form, setForm] = useState({
-    seafarer_id: '', book_type: '', request_type: '', reason: '',
+    seafarer_id: lockedSf?.id || '', book_type: '', request_type: '', reason: '',
     passport_copy: false, photo: false, previous_book: false, fee_receipt: false,
   });
   const [errors, setErrors] = useState<any>({});
@@ -82,10 +84,14 @@ function NewBookModal({ onClose, onSave }: { onClose: () => void; onSave: (b: Se
                 <div className="form-section-title">Seafarer Information</div>
                 <div className="form-group">
                   <label>Seafarer <span style={{ color: '#dc2626' }}>*</span></label>
-                  <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
-                    <option value="">Select seafarer...</option>
-                    {mockSeafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-                  </select>
+                  {isSeafarer && lockedSf ? (
+                    <input value={`${lockedSf.name} (${lockedSf.id})`} readOnly style={{ background: '#f8fafc', color: '#374151' }} />
+                  ) : (
+                    <select value={form.seafarer_id} onChange={e => set('seafarer_id', e.target.value)} style={errors.seafarer_id ? { borderColor: '#dc2626' } : {}}>
+                      <option value="">Select seafarer...</option>
+                      {mockSeafarers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
+                    </select>
+                  )}
                   <Err k="seafarer_id" />
                 </div>
               </div>
@@ -299,7 +305,7 @@ export default function SeafarerBooks({ currentUser }: { currentUser?: any }) {
 
   return (
     <div className="page">
-      {showNew && <NewBookModal onClose={() => setShowNew(false)} onSave={handleSave} />}
+      {showNew && <NewBookModal onClose={() => setShowNew(false)} onSave={handleSave} currentUser={currentUser} />}
       {reviewing && <BookReviewModal book={reviewing} onClose={() => setReviewing(null)} onAction={handleAction} currentUser={currentUser} />}
 
       <div className="flex-between page-header">
